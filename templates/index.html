@@ -1,0 +1,832 @@
+{% extends "base.html" %}
+
+{% block title %}DFD Architect — Workspace{% endblock %}
+
+{% block body %}
+<div id="app-container">
+  
+  <!-- =========================================================================
+       Left Application Sidebar
+       ========================================================================= -->
+  <aside class="app-sidebar">
+    <div class="sidebar-header">
+      <div class="brand-logo">
+        <i class="fa-solid fa-diagram-project"></i>
+      </div>
+      <div class="brand-text">
+        <h1>DFD Architect</h1>
+        <p>System Documenter</p>
+      </div>
+    </div>
+
+    <div class="sidebar-nav">
+      <span class="nav-section-title">Core Workspace</span>
+      <a class="nav-item active" data-view="dashboard" onclick="App.switchView('dashboard')">
+        <i class="fa-solid fa-chart-pie"></i>
+        <span>Dashboard</span>
+      </a>
+      <a class="nav-item" data-view="projects" onclick="App.switchView('projects')">
+        <i class="fa-solid fa-folder-tree"></i>
+        <span>My Projects</span>
+        <span class="nav-badge" id="sidebar-projects-count">0</span>
+      </a>
+      <a class="nav-item" onclick="App.openCreateProjectModal()" style="color: var(--primary-600); font-weight: 700;">
+        <i class="fa-solid fa-circle-plus"></i>
+        <span>+ Create DFD</span>
+      </a>
+      <a class="nav-item" data-view="designer" onclick="App.switchView('designer')">
+        <i class="fa-solid fa-pen-ruler"></i>
+        <span>DFD Designer</span>
+      </a>
+      <a class="nav-item" data-view="docs" onclick="App.switchView('docs')">
+        <i class="fa-solid fa-file-lines"></i>
+        <span>Documentation</span>
+      </a>
+
+      <span class="nav-section-title">Resources & Tools</span>
+      <a class="nav-item" data-view="templates" onclick="App.switchView('templates')">
+        <i class="fa-solid fa-shapes"></i>
+        <span>Templates Library</span>
+        <span class="nav-badge">7 Pre-built</span>
+      </a>
+      <a class="nav-item" data-view="analytics" onclick="App.switchView('analytics')">
+        <i class="fa-solid fa-chart-line"></i>
+        <span>Analytics</span>
+      </a>
+      <a class="nav-item" data-view="settings" onclick="App.switchView('settings')">
+        <i class="fa-solid fa-sliders"></i>
+        <span>Settings</span>
+      </a>
+      <a class="nav-item" data-view="help" onclick="App.switchView('help')">
+        <i class="fa-solid fa-circle-question"></i>
+        <span>Help & Guide</span>
+      </a>
+    </div>
+
+    <div class="sidebar-footer">
+      <div class="user-card">
+        <div class="user-avatar" id="user-avatar-initials">
+          {{ user.full_name[:2].upper() if user.full_name else 'AR' }}
+        </div>
+        <div class="user-info">
+          <div class="user-name" id="user-display-name">{{ user.full_name or user.username }}</div>
+          <div class="user-role">{{ user.role }}</div>
+        </div>
+        <button class="btn-icon" onclick="App.logout()" title="Sign Out">
+          <i class="fa-solid fa-arrow-right-from-bracket"></i>
+        </button>
+      </div>
+    </div>
+  </aside>
+
+  <!-- =========================================================================
+       Main Application Shell
+       ========================================================================= -->
+  <main class="app-main">
+    <!-- Top Global Header -->
+    <header class="app-header">
+      <div class="header-left">
+        <!-- Quick Project Switcher Dropdown -->
+        <div class="project-quick-select" onclick="App.switchView('projects')" title="Switch Active Project">
+          <i class="fa-solid fa-diagram-project" style="color: var(--primary-600);"></i>
+          <span id="header-active-project-name">Loading Project...</span>
+          <i class="fa-solid fa-chevron-down" style="font-size: 0.7rem; color: var(--text-muted);"></i>
+        </div>
+
+        <div class="breadcrumbs" id="app-breadcrumbs">
+          <span>Workspace</span>
+          <i class="fa-solid fa-chevron-right" style="font-size: 0.65rem;"></i>
+          <span class="current" id="breadcrumb-current-view">Dashboard</span>
+        </div>
+      </div>
+
+      <div class="header-right">
+        <!-- Global Search Trigger -->
+        <button class="search-trigger-btn" onclick="App.openSearchModal()">
+          <i class="fa-solid fa-magnifying-glass"></i>
+          <span>Quick search...</span>
+          <kbd class="kbd-shortcut">Ctrl+K</kbd>
+        </button>
+
+        <!-- Auto-Save Status Pill (in Designer View) -->
+        <div id="save-status-pill" class="save-status-pill" style="display: none;">
+          <i class="fa-solid fa-check"></i>
+          <span id="save-status-text">Saved</span>
+        </div>
+
+        <!-- Validate Button -->
+        <button class="btn btn-secondary btn-sm" onclick="App.runValidation()" title="Validate DFD Rules">
+          <i class="fa-solid fa-shield-halved" style="color: var(--primary-600);"></i>
+          <span>Validate DFD</span>
+        </button>
+
+        <!-- Generate Documentation Button -->
+        <button class="btn btn-secondary btn-sm" onclick="App.switchView('docs')" title="Generate Structured Documentation">
+          <i class="fa-solid fa-book" style="color: var(--accent-emerald);"></i>
+          <span>Documentation</span>
+        </button>
+
+        <!-- Export Menu Trigger -->
+        <button class="btn btn-primary btn-sm" onclick="App.openExportModal()" title="Export Diagram & Docs">
+          <i class="fa-solid fa-file-export"></i>
+          <span>Export</span>
+        </button>
+
+        <!-- Theme Switcher Toggle -->
+        <button class="btn-icon" id="theme-toggle-btn" onclick="App.toggleTheme()" title="Toggle Dark/Light Mode">
+          <i class="fa-solid fa-moon"></i>
+        </button>
+
+        <!-- Shortcuts Help -->
+        <button class="btn-icon" onclick="App.openModal('modal-shortcuts')" title="Keyboard Shortcuts">
+          <i class="fa-solid fa-keyboard"></i>
+        </button>
+      </div>
+    </header>
+
+    <!-- Views Container -->
+    <div class="views-container">
+      
+      <!-- =====================================================================
+           1. VIEW: Dashboard
+           ===================================================================== -->
+      <section id="view-dashboard" class="app-view active dashboard-view">
+        <div class="dashboard-hero">
+          <div class="hero-content">
+            <h1>System Data Flow Diagram Workspace</h1>
+            <p>Visually architect, mathematically validate, and automatically compile structured software engineering DFD documentation.</p>
+          </div>
+          <div class="hero-actions">
+            <button class="btn btn-primary" onclick="App.openCreateProjectModal()">
+              <i class="fa-solid fa-plus"></i> Create New DFD
+            </button>
+            <button class="btn btn-secondary" onclick="App.switchView('templates')" style="background: rgba(255,255,255,0.15); border-color: rgba(255,255,255,0.3); color: white;">
+              <i class="fa-solid fa-shapes"></i> Browse Templates
+            </button>
+          </div>
+        </div>
+
+        <!-- Dashboard Statistics Cards -->
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-icon" style="background: #EEF2FF; color: #4F46E5;">
+              <i class="fa-solid fa-folder-tree"></i>
+            </div>
+            <div class="stat-info">
+              <div class="stat-value" id="stat-total-projects">0</div>
+              <div class="stat-label">Total Projects</div>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon" style="background: #EFF6FF; color: #2563EB;">
+              <i class="fa-solid fa-layer-group"></i>
+            </div>
+            <div class="stat-info">
+              <div class="stat-value" id="stat-total-levels">0</div>
+              <div class="stat-label">DFD Levels</div>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon" style="background: #EFF6FF; color: #2563EB;">
+              <i class="fa-solid fa-gears"></i>
+            </div>
+            <div class="stat-info">
+              <div class="stat-value" id="stat-total-processes">0</div>
+              <div class="stat-label">Processes</div>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon" style="background: #ECFDF5; color: #059669;">
+              <i class="fa-solid fa-database"></i>
+            </div>
+            <div class="stat-info">
+              <div class="stat-value" id="stat-total-datastores">0</div>
+              <div class="stat-label">Data Stores</div>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon" style="background: #FEF3C7; color: #D97706;">
+              <i class="fa-solid fa-users"></i>
+            </div>
+            <div class="stat-info">
+              <div class="stat-value" id="stat-total-entities">0</div>
+              <div class="stat-label">External Entities</div>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon" style="background: #F3E8FF; color: #7C3AED;">
+              <i class="fa-solid fa-arrow-right-arrow-left"></i>
+            </div>
+            <div class="stat-info">
+              <div class="stat-value" id="stat-total-flows">0</div>
+              <div class="stat-label">Data Flows</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Two Column Dashboard Layout -->
+        <div class="dashboard-grid">
+          <!-- Left: Recent Projects Table -->
+          <div class="card">
+            <div class="card-header">
+              <h3 class="card-title">Recent DFD Projects</h3>
+              <button class="btn btn-secondary btn-sm" onclick="App.switchView('projects')">View All</button>
+            </div>
+            <div class="projects-table-wrapper">
+              <table class="custom-table" id="dashboard-recent-projects-table">
+                <thead>
+                  <tr>
+                    <th>Project Name</th>
+                    <th>DFD Level</th>
+                    <th>Components</th>
+                    <th>Last Modified</th>
+                    <th style="text-align: right;">Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="dashboard-recent-projects-tbody">
+                  <!-- Rendered dynamically -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Right: Architecture Composition Chart -->
+          <div class="card">
+            <div class="card-header">
+              <h3 class="card-title">Architecture Breakdown</h3>
+            </div>
+            <div style="height: 240px; position: relative; display: flex; align-items: center; justify-content: center;">
+              <canvas id="dashboardComponentChart"></canvas>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- =====================================================================
+           2. VIEW: My Projects
+           ===================================================================== -->
+      <section id="view-projects" class="app-view dashboard-view">
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem;">
+          <div>
+            <h2 style="font-family: var(--font-display); font-size: 1.6rem; font-weight: 800; color: var(--text-primary);">My Projects</h2>
+            <p style="font-size: 0.85rem; color: var(--text-muted);">Manage, duplicate, validate, and export system diagram specifications.</p>
+          </div>
+          <button class="btn btn-primary" onclick="App.openCreateProjectModal()">
+            <i class="fa-solid fa-plus"></i> Create New DFD
+          </button>
+        </div>
+
+        <!-- Search & Filter Controls -->
+        <div class="card" style="margin-bottom: 1.5rem; padding: 1rem 1.25rem;">
+          <div style="display: flex; gap: 1rem; flex-wrap: wrap; align-items: center;">
+            <div style="flex: 1; min-width: 240px; position: relative;">
+              <input type="text" id="projects-search-input" class="form-input" placeholder="Search projects by title, description or system..." oninput="ProjectsView.filterProjects()">
+              <i class="fa-solid fa-magnifying-glass" style="position: absolute; right: 12px; top: 12px; color: var(--text-muted); font-size: 0.85rem;"></i>
+            </div>
+            <div style="width: 200px;">
+              <select id="projects-level-filter" class="form-select" onchange="ProjectsView.filterProjects()">
+                <option value="all">All DFD Levels</option>
+                <option value="Context">Context / Level 0</option>
+                <option value="Level 1">Level 1</option>
+                <option value="Level 2">Level 2</option>
+              </select>
+            </div>
+            <div style="width: 180px;">
+              <select id="projects-sort-select" class="form-select" onchange="ProjectsView.filterProjects()">
+                <option value="updated_at">Sort: Last Modified</option>
+                <option value="created_at">Sort: Created Date</option>
+                <option value="name">Sort: Project Name</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- Projects Grid -->
+        <div class="projects-grid" id="projects-list-container">
+          <!-- Rendered dynamically -->
+        </div>
+      </section>
+
+      <!-- =====================================================================
+           3. VIEW: DFD Designer Workspace (Full Interactive Canvas)
+           ===================================================================== -->
+      <section id="view-designer" class="app-view fullscreen-view">
+        <div class="designer-layout">
+          
+          <!-- Left Component Palette -->
+          <div class="designer-palette">
+            <div class="palette-header">
+              <h4 class="palette-title">DFD Components</h4>
+              <p class="palette-hint">Drag components onto canvas</p>
+            </div>
+            <div class="palette-body">
+              <!-- Draggable Process -->
+              <div class="palette-item item-process" draggable="true" ondragstart="Designer.handlePaletteDragStart(event, 'process')">
+                <div class="palette-item-header">
+                  <div class="palette-item-icon"><i class="fa-solid fa-gears"></i></div>
+                  <span class="palette-item-name">Process</span>
+                </div>
+                <p class="palette-item-desc">Transforms input data flows into output data flows (e.g. 1.0 Verify User).</p>
+              </div>
+
+              <!-- Draggable External Entity -->
+              <div class="palette-item item-entity" draggable="true" ondragstart="Designer.handlePaletteDragStart(event, 'entity')">
+                <div class="palette-item-header">
+                  <div class="palette-item-icon"><i class="fa-solid fa-users"></i></div>
+                  <span class="palette-item-name">External Entity</span>
+                </div>
+                <p class="palette-item-desc">External data source or sink actor (e.g. Customer, Payment Gateway).</p>
+              </div>
+
+              <!-- Draggable Data Store -->
+              <div class="palette-item item-store" draggable="true" ondragstart="Designer.handlePaletteDragStart(event, 'datastore')">
+                <div class="palette-item-header">
+                  <div class="palette-item-icon"><i class="fa-solid fa-database"></i></div>
+                  <span class="palette-item-name">Data Store</span>
+                </div>
+                <p class="palette-item-desc">Data repository at rest (e.g. D1 User Database, D2 Order DB).</p>
+              </div>
+
+              <!-- Connection Helper Info -->
+              <div class="card" style="padding: 0.85rem; background: var(--bg-subtle); margin-top: auto; border: 1px dashed var(--border-default);">
+                <div style="font-size: 0.75rem; font-weight: 700; color: var(--text-primary); margin-bottom: 0.3rem;">
+                  <i class="fa-solid fa-arrow-right-arrow-left" style="color: var(--primary-600);"></i> Data Flow Connections
+                </div>
+                <p style="font-size: 0.7rem; color: var(--text-muted); line-height: 1.3;">
+                  Hover on any node port & drag arrow to target node to create a directional Data Flow.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Central Canvas Viewport -->
+          <div class="designer-canvas-wrapper" id="canvas-wrapper" ondragover="Designer.handleCanvasDragOver(event)" ondrop="Designer.handleCanvasDrop(event)">
+            
+            <!-- Canvas Floating Toolbar -->
+            <div class="canvas-floating-toolbar">
+              <button class="toolbar-btn active" id="tool-select-btn" onclick="Designer.setMode('select')" title="Select & Move Tool (V)">
+                <i class="fa-solid fa-arrow-pointer"></i>
+              </button>
+              <button class="toolbar-btn" id="tool-connect-btn" onclick="Designer.setMode('connect')" title="Connection Mode">
+                <i class="fa-solid fa-arrow-trend-up"></i>
+              </button>
+              <div class="toolbar-divider"></div>
+              
+              <button class="toolbar-btn" onclick="CanvasEngine.undo()" title="Undo (Ctrl+Z)">
+                <i class="fa-solid fa-rotate-left"></i>
+              </button>
+              <button class="toolbar-btn" onclick="CanvasEngine.redo()" title="Redo (Ctrl+Y)">
+                <i class="fa-solid fa-rotate-right"></i>
+              </button>
+              <div class="toolbar-divider"></div>
+
+              <button class="toolbar-btn" onclick="CanvasEngine.zoomIn()" title="Zoom In (+)">
+                <i class="fa-solid fa-magnifying-glass-plus"></i>
+              </button>
+              <button class="toolbar-btn" onclick="CanvasEngine.zoomOut()" title="Zoom Out (-)">
+                <i class="fa-solid fa-magnifying-glass-minus"></i>
+              </button>
+              <button class="toolbar-btn" onclick="CanvasEngine.zoomFit()" title="Fit to Screen">
+                <i class="fa-solid fa-expand"></i>
+              </button>
+              <button class="toolbar-btn" onclick="CanvasEngine.autoLayout()" title="Auto-Layout Diagram (Alt+L)">
+                <i class="fa-solid fa-wand-magic-sparkles"></i>
+              </button>
+              <div class="toolbar-divider"></div>
+
+              <button class="toolbar-btn" onclick="App.runValidation()" title="Validate DFD Rules" style="color: var(--accent-emerald);">
+                <i class="fa-solid fa-shield-check"></i>
+              </button>
+              <button class="toolbar-btn" onclick="Designer.manualSave()" title="Save Diagram (Ctrl+S)">
+                <i class="fa-solid fa-floppy-disk"></i>
+              </button>
+            </div>
+
+            <!-- Level Switcher Badge -->
+            <div class="canvas-level-badge">
+              <i class="fa-solid fa-layer-group" style="color: var(--primary-600);"></i>
+              <select id="canvas-level-selector" class="level-select-dropdown" onchange="Designer.switchLevel(this.value)">
+                <!-- Dynamically populated -->
+              </select>
+              <button class="btn btn-secondary btn-sm" onclick="Designer.openCreateLevelModal()" style="padding: 0.15rem 0.45rem; font-size: 0.7rem;" title="Decompose Process / New Level">
+                <i class="fa-solid fa-plus"></i>
+              </button>
+            </div>
+
+            <!-- Actual Viewport -->
+            <div class="canvas-viewport" id="canvas-viewport">
+              <div class="canvas-grid" id="canvas-grid"></div>
+              
+              <!-- Transform Container (Moved and Scaled on Zoom/Pan) -->
+              <div class="canvas-transform-layer" id="canvas-transform-layer">
+                <!-- SVG Connection Arrows Layer -->
+                <svg class="canvas-svg-layer" id="canvas-svg">
+                  <defs>
+                    <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+                      <polygon points="0 0, 10 3.5, 0 7" fill="var(--dfd-flow-color)" />
+                    </marker>
+                    <marker id="arrowhead-active" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+                      <polygon points="0 0, 10 3.5, 0 7" fill="#2563EB" />
+                    </marker>
+                  </defs>
+                  <g id="svg-flows-group"></g>
+                  <path id="svg-preview-line" d="" fill="none" stroke="#2563EB" stroke-width="2.5" stroke-dasharray="5,5" style="display: none;" />
+                </svg>
+
+                <!-- HTML Nodes Layer -->
+                <div class="canvas-nodes-layer" id="canvas-nodes"></div>
+              </div>
+            </div>
+
+            <!-- Minimap -->
+            <div class="canvas-minimap">
+              <div class="minimap-header">Overview</div>
+              <div class="minimap-canvas" id="minimap-canvas">
+                <div class="minimap-viewport-box" id="minimap-box"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Right Properties Inspector -->
+          <div class="designer-inspector" id="designer-inspector">
+            <div class="inspector-header">
+              <h4 class="inspector-title" id="inspector-title">Properties Inspector</h4>
+              <button class="btn-icon" onclick="Designer.deselectAll()"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="inspector-body" id="inspector-body">
+              <div class="inspector-empty">
+                <i class="fa-solid fa-arrow-pointer"></i>
+                <p>Select any node or data flow on the canvas to inspect and edit its properties in real-time.</p>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- =====================================================================
+           4. VIEW: Documentation Generator
+           ===================================================================== -->
+      <section id="view-docs" class="app-view documentation-view">
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem;">
+          <div>
+            <h2 style="font-family: var(--font-display); font-size: 1.6rem; font-weight: 800; color: var(--text-primary);">Automatic Documentation Generator</h2>
+            <p style="font-size: 0.85rem; color: var(--text-muted);">Compiled software engineering DFD specifications, data dictionary, and compliance report.</p>
+          </div>
+          <div style="display: flex; gap: 0.6rem;">
+            <button class="btn btn-secondary" onclick="DocsView.copyMarkdown()">
+              <i class="fa-solid fa-copy"></i> Copy Markdown
+            </button>
+            <button class="btn btn-secondary" onclick="DocsView.exportDocx()">
+              <i class="fa-solid fa-file-word" style="color: #2563EB;"></i> Word (.docx)
+            </button>
+            <button class="btn btn-primary" onclick="DocsView.exportPdf()">
+              <i class="fa-solid fa-file-pdf"></i> Download PDF
+            </button>
+          </div>
+        </div>
+
+        <div id="docs-content-container">
+          <!-- Rendered dynamically -->
+        </div>
+      </section>
+
+      <!-- =====================================================================
+           5. VIEW: Templates Library
+           ===================================================================== -->
+      <section id="view-templates" class="app-view dashboard-view">
+        <div style="margin-bottom: 2rem;">
+          <h2 style="font-family: var(--font-display); font-size: 1.6rem; font-weight: 800; color: var(--text-primary);">DFD Templates Library</h2>
+          <p style="font-size: 0.85rem; color: var(--text-muted);">Jumpstart system architecture with pre-configured industry standard DFDs.</p>
+        </div>
+
+        <div class="templates-grid" id="templates-container">
+          <!-- Rendered dynamically -->
+        </div>
+      </section>
+
+      <!-- =====================================================================
+           6. VIEW: Analytics
+           ===================================================================== -->
+      <section id="view-analytics" class="app-view dashboard-view">
+        <div style="margin-bottom: 1.5rem;">
+          <h2 style="font-family: var(--font-display); font-size: 1.6rem; font-weight: 800; color: var(--text-primary);">Architecture Analytics</h2>
+          <p style="font-size: 0.85rem; color: var(--text-muted);">Metrics, component distribution, and activity audit timeline.</p>
+        </div>
+
+        <div class="dashboard-grid">
+          <div class="card">
+            <div class="card-header">
+              <h3 class="card-title">Component Distribution</h3>
+            </div>
+            <div style="height: 280px; position: relative;">
+              <canvas id="analyticsDoughnutChart"></canvas>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <h3 class="card-title">Recent Activity Log</h3>
+            </div>
+            <div id="analytics-activity-timeline" style="display: flex; flex-direction: column; gap: 0.75rem; max-height: 280px; overflow-y: auto;">
+              <!-- Rendered dynamically -->
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- =====================================================================
+           7. VIEW: Settings
+           ===================================================================== -->
+      <section id="view-settings" class="app-view dashboard-view">
+        <div style="max-width: 800px; margin: 0 auto;">
+          <h2 style="font-family: var(--font-display); font-size: 1.6rem; font-weight: 800; color: var(--text-primary); margin-bottom: 1.5rem;">Preferences & Settings</h2>
+          
+          <div class="card" style="margin-bottom: 1.5rem;">
+            <div class="card-header">
+              <h3 class="card-title">User Profile</h3>
+            </div>
+            <form id="settings-profile-form" onsubmit="SettingsView.saveProfile(event)">
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                <div class="form-group">
+                  <label class="form-label">Full Name</label>
+                  <input type="text" id="set-fullname" class="form-input" value="{{ user.full_name or '' }}">
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Email</label>
+                  <input type="email" id="set-email" class="form-input" value="{{ user.email or '' }}">
+                </div>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Professional Role / Title</label>
+                <input type="text" id="set-role" class="form-input" value="{{ user.role or 'Software Architect' }}">
+              </div>
+              <button type="submit" class="btn btn-primary btn-sm">Save Profile</button>
+            </form>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <h3 class="card-title">Workspace & Diagramming Preferences</h3>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 1rem;">
+              <div style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 0.75rem; border-bottom: 1px solid var(--border-subtle);">
+                <div>
+                  <div style="font-weight: 600; font-size: 0.88rem;">Canvas Notation Standard</div>
+                  <div style="font-size: 0.75rem; color: var(--text-muted);">Choose between standard Gane & Sarson or Yourdon & DeMarco notation</div>
+                </div>
+                <select id="pref-notation-style" class="form-select" style="width: 200px;" onchange="SettingsView.savePreferences()">
+                  <option value="gane_sarson">Gane & Sarson (Rounded Rectangles)</option>
+                  <option value="yourdon_demarcos">Yourdon & DeMarco (Circles/Bubbles)</option>
+                </select>
+              </div>
+
+              <div style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 0.75rem; border-bottom: 1px solid var(--border-subtle);">
+                <div>
+                  <div style="font-weight: 600; font-size: 0.88rem;">Snap to Grid</div>
+                  <div style="font-size: 0.75rem; color: var(--text-muted);">Snap components to 20px grid while dragging</div>
+                </div>
+                <input type="checkbox" id="pref-snap-grid" checked onchange="SettingsView.savePreferences()">
+              </div>
+
+              <div style="display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                  <div style="font-weight: 600; font-size: 0.88rem;">Automatic Real-time Save</div>
+                  <div style="font-size: 0.75rem; color: var(--text-muted);">Persist diagram layout automatically in the background</div>
+                </div>
+                <input type="checkbox" id="pref-auto-save" checked onchange="SettingsView.savePreferences()">
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- =====================================================================
+           8. VIEW: Help & Guide
+           ===================================================================== -->
+      <section id="view-help" class="app-view dashboard-view">
+        <div style="max-width: 900px; margin: 0 auto;">
+          <h2 style="font-family: var(--font-display); font-size: 1.6rem; font-weight: 800; color: var(--text-primary); margin-bottom: 0.5rem;">DFD Engineering Guide & Documentation</h2>
+          <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1.5rem;">A complete reference on Data Flow Diagram symbols, hierarchy levels, and academic rules.</p>
+
+          <!-- Section 1: Introduction -->
+          <div class="card" style="margin-bottom: 1.5rem;">
+            <h3 class="card-title" style="margin-bottom: 0.75rem;"><i class="fa-solid fa-circle-info" style="color: var(--primary-600); margin-right: 6px;"></i> 1. What is a Data Flow Diagram (DFD)?</h3>
+            <p style="font-size: 0.88rem; color: var(--text-secondary); line-height: 1.6;">
+              A <strong>Data Flow Diagram (DFD)</strong> is a standardized graphical model representing the flow, transformation, and storage of data throughout an information system. Unlike procedural flowcharts, a DFD focuses purely on <strong>what</strong> data moves and transforms rather than control logic, sequencing, or loops.
+            </p>
+          </div>
+
+          <!-- Section 2: Core Components -->
+          <div class="card" style="margin-bottom: 1.5rem;">
+            <h3 class="card-title" style="margin-bottom: 0.75rem;"><i class="fa-solid fa-cubes" style="color: var(--primary-600); margin-right: 6px;"></i> 2. Core DFD Components</h3>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+              <div style="padding: 1rem; background: var(--bg-subtle); border-radius: var(--radius-md); border-left: 4px solid #2563EB;">
+                <strong style="color: #2563EB; font-size: 0.92rem;"><i class="fa-solid fa-gears"></i> Process:</strong>
+                <p style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 0.35rem; line-height: 1.4;">Transforms incoming data into outgoing data. Must have an identifier (e.g. 1.0, 2.1) and an active verb phrase title.</p>
+              </div>
+              <div style="padding: 1rem; background: var(--bg-subtle); border-radius: var(--radius-md); border-left: 4px solid #D97706;">
+                <strong style="color: #D97706; font-size: 0.92rem;"><i class="fa-solid fa-users"></i> External Entity (Source / Sink):</strong>
+                <p style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 0.35rem; line-height: 1.4;">People, systems, or organizations outside the boundary of the system that produce inputs or consume outputs.</p>
+              </div>
+              <div style="padding: 1rem; background: var(--bg-subtle); border-radius: var(--radius-md); border-left: 4px solid #059669;">
+                <strong style="color: #059669; font-size: 0.92rem;"><i class="fa-solid fa-database"></i> Data Store (Repository at Rest):</strong>
+                <p style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 0.35rem; line-height: 1.4;">Persistent databases, cache layers, or physical archives where information is retained for later retrieval.</p>
+              </div>
+              <div style="padding: 1rem; background: var(--bg-subtle); border-radius: var(--radius-md); border-left: 4px solid #7C3AED;">
+                <strong style="color: #7C3AED; font-size: 0.92rem;"><i class="fa-solid fa-arrow-right-arrow-left"></i> Data Flow (Packet in Motion):</strong>
+                <p style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 0.35rem; line-height: 1.4;">Directional pipeline carrying structured payloads, messages, or documents between processes and nodes.</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Section 3: Academic Rules and Compliance -->
+          <div class="card" style="margin-bottom: 1.5rem;">
+            <h3 class="card-title" style="margin-bottom: 0.75rem;"><i class="fa-solid fa-shield-check" style="color: var(--accent-emerald); margin-right: 6px;"></i> 3. Standard DFD Academic Validation Rules</h3>
+            <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+              <div style="padding: 0.75rem 1rem; background: var(--bg-subtle); border-radius: var(--radius-md);">
+                <div style="font-weight: 700; font-size: 0.85rem; color: var(--text-primary);"><i class="fa-solid fa-ban" style="color: var(--accent-rose);"></i> Rule 1: No Direct Entity-to-Entity Flows</div>
+                <p style="font-size: 0.78rem; color: var(--text-muted); margin-top: 0.2rem;">External entities cannot directly send data to other external entities within the system model. All data must pass through an internal Process.</p>
+              </div>
+
+              <div style="padding: 0.75rem 1rem; background: var(--bg-subtle); border-radius: var(--radius-md);">
+                <div style="font-weight: 700; font-size: 0.85rem; color: var(--text-primary);"><i class="fa-solid fa-ban" style="color: var(--accent-rose);"></i> Rule 2: No Direct Store-to-Store Flows</div>
+                <p style="font-size: 0.78rem; color: var(--text-muted); margin-top: 0.2rem;">Data cannot move autonomously between two data stores. A Process is required to extract, validate, and write the data.</p>
+              </div>
+
+              <div style="padding: 0.75rem 1rem; background: var(--bg-subtle); border-radius: var(--radius-md);">
+                <div style="font-weight: 700; font-size: 0.85rem; color: var(--text-primary);"><i class="fa-solid fa-ban" style="color: var(--accent-rose);"></i> Rule 3: No Direct Entity-to-Store Flows</div>
+                <p style="font-size: 0.78rem; color: var(--text-muted); margin-top: 0.2rem;">An external actor cannot directly read or write to a data store without an intermediary Process handling validation.</p>
+              </div>
+
+              <div style="padding: 0.75rem 1rem; background: var(--bg-subtle); border-radius: var(--radius-md);">
+                <div style="font-weight: 700; font-size: 0.85rem; color: var(--text-primary);"><i class="fa-solid fa-circle-exclamation" style="color: var(--accent-amber);"></i> Rule 4: No Black Holes or Miracles</div>
+                <p style="font-size: 0.78rem; color: var(--text-muted); margin-top: 0.2rem;">Processes cannot have only inputs (Black Hole) or only outputs (Miracle). A valid process must transform inputs into distinct outputs.</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Section 4: Hierarchy Levels -->
+          <div class="card">
+            <h3 class="card-title" style="margin-bottom: 0.75rem;"><i class="fa-solid fa-layer-group" style="color: var(--primary-600); margin-right: 6px;"></i> 4. DFD Decomposition Hierarchy</h3>
+            <ul style="font-size: 0.85rem; color: var(--text-secondary); line-height: 1.7; margin-left: 1.25rem;">
+              <li><strong>Level 0 (Context Diagram):</strong> High-level view showing the entire system as a single process (0.0) interacting with external entities. Data stores are hidden at this level.</li>
+              <li><strong>Level 1:</strong> Decomposes the single system process into 3–7 primary sub-processes (1.0, 2.0, 3.0) and reveals the primary system data stores.</li>
+              <li><strong>Level 2+:</strong> Further explodes a complex process (e.g. 2.0) into detailed child functional steps (2.1, 2.2, 2.3).</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+    </div>
+  </main>
+</div>
+
+<!-- =========================================================================
+     Bottom DFD Validation Drawer / Panel
+     ========================================================================= -->
+<div id="validation-drawer" class="validation-drawer">
+  <div class="validation-header">
+    <div style="display: flex; align-items: center; gap: 0.75rem;">
+      <i class="fa-solid fa-shield-halved" style="color: var(--primary-600); font-size: 1.1rem;"></i>
+      <h3 style="font-size: 1rem; font-weight: 700; color: var(--text-primary);">DFD Validation & Compliance Engine</h3>
+      <div id="validation-score-badge" class="validation-score-badge badge-success">
+        <i class="fa-solid fa-circle-check"></i>
+        <span>100% Compliant</span>
+      </div>
+    </div>
+    <div style="display: flex; align-items: center; gap: 0.5rem;">
+      <button class="btn btn-secondary btn-sm" onclick="App.runValidation()">
+        <i class="fa-solid fa-rotate-right"></i> Re-Validate
+      </button>
+      <button class="btn-icon" onclick="ValidationView.closeDrawer()"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+  </div>
+  <div class="validation-body" id="validation-body">
+    <!-- Validation Rules Output -->
+  </div>
+</div>
+
+<!-- =========================================================================
+     Modal: Create New Project
+     ========================================================================= -->
+<div id="modal-create-project" class="modal-overlay">
+  <div class="modal-box">
+    <div class="modal-header">
+      <h3 class="modal-title">Create New DFD Project</h3>
+      <button class="btn-icon" onclick="App.closeModal('modal-create-project')"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <form id="create-project-form" onsubmit="ProjectsView.handleCreateProject(event)">
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label" for="new-proj-name">Project Name *</label>
+          <input type="text" id="new-proj-name" class="form-input" placeholder="e.g. Smart Logistics & Fleet System" required autofocus>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="new-system-name">System Name</label>
+          <input type="text" id="new-system-name" class="form-input" placeholder="e.g. Fleet Core Engine">
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;">
+          <div class="form-group">
+            <label class="form-label" for="new-dfd-level">Initial DFD Level</label>
+            <select id="new-dfd-level" class="form-select">
+              <option value="Context Diagram / Level 0">Context Diagram / Level 0</option>
+              <option value="Level 1">Level 1</option>
+              <option value="Level 2">Level 2</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="new-author">Author / Architect</label>
+            <input type="text" id="new-author" class="form-input" value="{{ user.full_name or user.username }}">
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="new-proj-desc">Project Description</label>
+          <textarea id="new-proj-desc" class="form-textarea" rows="3" placeholder="Describe the scope, objectives, and boundaries of this system..."></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" onclick="App.closeModal('modal-create-project')">Cancel</button>
+        <button type="submit" class="btn btn-primary"><i class="fa-solid fa-check"></i> Create Project</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- =========================================================================
+     Modal: Create DFD Level / Decompose Process
+     ========================================================================= -->
+<div id="modal-create-level" class="modal-overlay">
+  <div class="modal-box">
+    <div class="modal-header">
+      <h3 class="modal-title">Create / Decompose DFD Level</h3>
+      <button class="btn-icon" onclick="App.closeModal('modal-create-level')"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <form id="create-level-form" onsubmit="Designer.handleCreateLevel(event)">
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label" for="new-level-name">Level Name *</label>
+          <input type="text" id="new-level-name" class="form-input" placeholder="e.g. Level 2 – Process 2.0 Decomposition" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="new-parent-proc">Parent Process ID (Optional)</label>
+          <input type="text" id="new-parent-proc" class="form-input" placeholder="e.g. 2.0 or 3.0">
+          <p class="form-hint">Specifying a parent process will auto-link and scaffold child sub-processes.</p>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" onclick="App.closeModal('modal-create-level')">Cancel</button>
+        <button type="submit" class="btn btn-primary">Create Level</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- =========================================================================
+     Modal: Export Options
+     ========================================================================= -->
+<div id="modal-export" class="modal-overlay">
+  <div class="modal-box">
+    <div class="modal-header">
+      <h3 class="modal-title"><i class="fa-solid fa-file-export" style="color: var(--primary-600); margin-right: 8px;"></i> Export Project</h3>
+      <button class="btn-icon" onclick="App.closeModal('modal-export')"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <div class="modal-body" style="display: flex; flex-direction: column; gap: 1rem;">
+      <div style="font-size: 0.85rem; color: var(--text-secondary);">Select the export format for your diagram and documentation:</div>
+      
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;">
+        <button class="btn btn-secondary" style="padding: 1rem; flex-direction: column; gap: 0.4rem; text-align: center;" onclick="App.triggerExport('pdf')">
+          <i class="fa-solid fa-file-pdf" style="font-size: 1.5rem; color: #DC2626;"></i>
+          <span style="font-weight: 700;">PDF Document</span>
+          <span style="font-size: 0.7rem; color: var(--text-muted);">Formatted PDF Report</span>
+        </button>
+
+        <button class="btn btn-secondary" style="padding: 1rem; flex-direction: column; gap: 0.4rem; text-align: center;" onclick="App.triggerExport('docx')">
+          <i class="fa-solid fa-file-word" style="font-size: 1.5rem; color: #2563EB;"></i>
+          <span style="font-weight: 700;">Word (.docx)</span>
+          <span style="font-size: 0.7rem; color: var(--text-muted);">Editable MS Word File</span>
+        </button>
+
+        <button class="btn btn-secondary" style="padding: 1rem; flex-direction: column; gap: 0.4rem; text-align: center;" onclick="App.triggerExport('svg')">
+          <i class="fa-solid fa-vector-square" style="font-size: 1.5rem; color: #7C3AED;"></i>
+          <span style="font-weight: 700;">Vector SVG</span>
+          <span style="font-size: 0.7rem; color: var(--text-muted);">Scalable Vector Image</span>
+        </button>
+
+        <button class="btn btn-secondary" style="padding: 1rem; flex-direction: column; gap: 0.4rem; text-align: center;" onclick="App.triggerExport('png')">
+          <i class="fa-solid fa-image" style="font-size: 1.5rem; color: #059669;"></i>
+          <span style="font-weight: 700;">High-Res PNG</span>
+          <span style="font-size: 0.7rem; color: var(--text-muted);">Raster Canvas Image</span>
+        </button>
+      </div>
+
+      <div style="padding-top: 0.75rem; border-top: 1px solid var(--border-subtle);">
+        <button class="btn btn-secondary" style="width: 100%; justify-content: center;" onclick="App.triggerExport('json')">
+          <i class="fa-solid fa-code" style="color: #4F46E5;"></i> Full Project JSON Backup
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}

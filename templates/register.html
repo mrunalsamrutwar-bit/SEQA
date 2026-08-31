@@ -1,0 +1,175 @@
+{% extends "base.html" %}
+
+{% block title %}Register — DFD Architect{% endblock %}
+
+{% block body %}
+<div class="auth-page-wrapper">
+  <div class="auth-container-grid">
+    
+    <!-- Left Hero Showcase Column -->
+    <div class="auth-showcase-panel">
+      <div class="showcase-brand">
+        <div class="brand-logo-large">
+          <i class="fa-solid fa-diagram-project"></i>
+        </div>
+        <div class="showcase-title-wrap">
+          <h1 class="showcase-app-name">DFD Architect</h1>
+          <span class="showcase-app-tag">Enterprise System Modeling</span>
+        </div>
+      </div>
+
+      <div class="showcase-hero-text">
+        <h2>Start Architecting System Diagrams in Seconds</h2>
+        <p>Join engineering teams building compliant Data Flow Diagrams, structuring system processes, and creating automatic documentation.</p>
+      </div>
+
+      <div class="showcase-feature-cards">
+        <div class="showcase-card">
+          <div class="showcase-card-icon" style="background: rgba(37, 99, 235, 0.15); color: #3B82F6;">
+            <i class="fa-solid fa-wand-magic-sparkles"></i>
+          </div>
+          <div>
+            <h4>Smart Hierarchical Auto-Layout</h4>
+            <p>Automatically organizes processes, entities, and stores into layered diagrams.</p>
+          </div>
+        </div>
+
+        <div class="showcase-card">
+          <div class="showcase-card-icon" style="background: rgba(16, 185, 129, 0.15); color: #10B981;">
+            <i class="fa-solid fa-book-bookmark"></i>
+          </div>
+          <div>
+            <h4>Automated Data Dictionary</h4>
+            <p>Instantly indexes all data flows, payloads, and persistent storage schemas.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right Register Form Column -->
+    <div class="auth-card-wrapper">
+      <div class="auth-card">
+        <div class="auth-card-header">
+          <h2 class="auth-card-title">Create Account</h2>
+          <p class="auth-card-subtitle">Get started with your free architect workspace</p>
+        </div>
+
+        <form id="register-form" onsubmit="handleRegister(event)">
+          <div class="form-group">
+            <label class="form-label" for="reg-fullname">Full Name</label>
+            <div class="input-icon-wrap">
+              <i class="fa-solid fa-id-card input-icon"></i>
+              <input type="text" id="reg-fullname" class="form-input" placeholder="e.g. Alex Morgan" required autofocus>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="reg-email">Work Email</label>
+            <div class="input-icon-wrap">
+              <i class="fa-solid fa-envelope input-icon"></i>
+              <input type="email" id="reg-email" class="form-input" placeholder="alex@engineering.org" required>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="reg-username">Username</label>
+            <div class="input-icon-wrap">
+              <i class="fa-solid fa-user input-icon"></i>
+              <input type="text" id="reg-username" class="form-input" placeholder="alex_architect" required pattern="[a-zA-Z0-9_-]{3,30}" title="3-30 letters, numbers, hyphens or underscores">
+            </div>
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;">
+            <div class="form-group">
+              <label class="form-label" for="reg-password">Password</label>
+              <div class="input-icon-wrap">
+                <i class="fa-solid fa-lock input-icon"></i>
+                <input type="password" id="reg-password" class="form-input" placeholder="••••••••" required minlength="6">
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="reg-confirm-password">Confirm</label>
+              <div class="input-icon-wrap">
+                <i class="fa-solid fa-shield input-icon"></i>
+                <input type="password" id="reg-confirm-password" class="form-input" placeholder="••••••••" required minlength="6">
+              </div>
+            </div>
+          </div>
+
+          <button type="submit" id="register-btn" class="btn btn-primary btn-auth-submit" style="margin-top: 0.5rem;">
+            <i class="fa-solid fa-user-plus"></i>
+            <span>Create Architect Account</span>
+          </button>
+        </form>
+
+        <div class="auth-card-footer">
+          Already have an account? <a href="{{ url_for('login_page') }}">Sign in</a>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+function showAuthToast(message, type = 'info') {
+  const container = document.getElementById('toast-container');
+  if (!container) return;
+  const toast = document.createElement('div');
+  toast.className = `toast toast-${type}`;
+  toast.innerHTML = `
+    <div style="font-size: 1.1rem; color: ${type === 'success' ? '#10B981' : (type === 'error' ? '#F43F5E' : '#3B82F6')};">
+      <i class="fa-solid ${type === 'success' ? 'fa-circle-check' : (type === 'error' ? 'fa-circle-xmark' : 'fa-circle-info')}"></i>
+    </div>
+    <div class="toast-content">
+      <div class="toast-title">${type === 'success' ? 'Success' : (type === 'error' ? 'Error' : 'Notice')}</div>
+      <div class="toast-message">${message}</div>
+    </div>
+  `;
+  container.appendChild(toast);
+  setTimeout(() => toast.remove(), 4000);
+}
+
+async function handleRegister(e) {
+  e.preventDefault();
+  const fullName = document.getElementById('reg-fullname').value.trim();
+  const email = document.getElementById('reg-email').value.trim();
+  const username = document.getElementById('reg-username').value.trim();
+  const password = document.getElementById('reg-password').value;
+  const confirmPassword = document.getElementById('reg-confirm-password').value;
+  const btn = document.getElementById('register-btn');
+
+  if (password !== confirmPassword) {
+    showAuthToast('Passwords do not match.', 'error');
+    return;
+  }
+
+  btn.disabled = true;
+  btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Creating Account...';
+
+  try {
+    const res = await API.post('/api/auth/register', {
+      full_name: fullName,
+      email: email,
+      username: username,
+      password: password
+    });
+
+    if (res.success) {
+      showAuthToast('Account Created! Redirecting...', 'success');
+      setTimeout(() => {
+        window.location.href = '/';
+      }, 400);
+    } else {
+      showAuthToast(res.error || 'Failed to create account.', 'error');
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fa-solid fa-user-plus"></i> <span>Create Architect Account</span>';
+    }
+  } catch (err) {
+    showAuthToast(err.message || 'Server connection failed.', 'error');
+    btn.disabled = false;
+    btn.innerHTML = '<i class="fa-solid fa-user-plus"></i> <span>Create Architect Account</span>';
+  }
+}
+</script>
+{% endblock %}

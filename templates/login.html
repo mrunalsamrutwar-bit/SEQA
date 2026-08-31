@@ -1,0 +1,219 @@
+{% extends "base.html" %}
+
+{% block title %}Login — DFD Architect{% endblock %}
+
+{% block body %}
+<div class="auth-page-wrapper">
+  <div class="auth-container-grid">
+    
+    <!-- Left Hero Showcase Column -->
+    <div class="auth-showcase-panel">
+      <div class="showcase-brand">
+        <div class="brand-logo-large">
+          <i class="fa-solid fa-diagram-project"></i>
+        </div>
+        <div class="showcase-title-wrap">
+          <h1 class="showcase-app-name">DFD Architect</h1>
+          <span class="showcase-app-tag">Enterprise System Modeling</span>
+        </div>
+      </div>
+
+      <div class="showcase-hero-text">
+        <h2>Architect, Validate & Compile System Data Flows</h2>
+        <p>A professional engineering workspace for structured Data Flow Diagrams, automated academic compliance auditing, and live multi-level software documentation.</p>
+      </div>
+
+      <!-- Feature Badges Carousel / Cards -->
+      <div class="showcase-feature-cards">
+        <div class="showcase-card">
+          <div class="showcase-card-icon" style="background: rgba(37, 99, 235, 0.15); color: #3B82F6;">
+            <i class="fa-solid fa-layer-group"></i>
+          </div>
+          <div>
+            <h4>Multi-Level Decomposition</h4>
+            <p>Deconstruct Level 0 Context boundaries into Level 1 & Level 2 process trees seamlessly.</p>
+          </div>
+        </div>
+
+        <div class="showcase-card">
+          <div class="showcase-card-icon" style="background: rgba(16, 185, 129, 0.15); color: #10B981;">
+            <i class="fa-solid fa-shield-check"></i>
+          </div>
+          <div>
+            <h4>Automated DFD Rule Validation</h4>
+            <p>Detect black holes, miracles, grey holes, and illegal entity-to-store flows in real-time.</p>
+          </div>
+        </div>
+
+        <div class="showcase-card">
+          <div class="showcase-card-icon" style="background: rgba(124, 58, 237, 0.15); color: #8B5CF6;">
+            <i class="fa-solid fa-file-signature"></i>
+          </div>
+          <div>
+            <h4>1-Click Word, PDF & Vector Export</h4>
+            <p>Export IEEE-style Software Engineering Specifications, data dictionaries, and SVG vectors.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="showcase-footer-meta">
+        <span><i class="fa-solid fa-circle-check" style="color: #10B981;"></i> 6 Pre-built Domain Templates</span>
+        <span><i class="fa-solid fa-circle-check" style="color: #10B981;"></i> Gane & Sarson / Yourdon Standards</span>
+      </div>
+    </div>
+
+    <!-- Right Login Form Column -->
+    <div class="auth-card-wrapper">
+      <div class="auth-card">
+        <div class="auth-card-header">
+          <div class="auth-mobile-brand">
+            <div class="brand-logo"><i class="fa-solid fa-diagram-project"></i></div>
+            <span style="font-weight: 800; font-size: 1.2rem; font-family: var(--font-display);">DFD Architect</span>
+          </div>
+          <h2 class="auth-card-title">Welcome Back</h2>
+          <p class="auth-card-subtitle">Sign in to your architecture workspace</p>
+        </div>
+
+        <!-- 1-Click Instant Demo Login Banner -->
+        <div class="demo-quick-banner" onclick="handleDemoLogin()">
+          <div class="demo-banner-content">
+            <div class="demo-sparkle-icon">
+              <i class="fa-solid fa-wand-magic-sparkles"></i>
+            </div>
+            <div>
+              <div class="demo-banner-title">1-Click Demo Login (Admin)</div>
+              <div class="demo-banner-sub">Pre-loaded with sample E-Commerce DFD models</div>
+            </div>
+          </div>
+          <i class="fa-solid fa-arrow-right demo-banner-arrow"></i>
+        </div>
+
+        <div class="auth-divider">
+          <span>or sign in with credentials</span>
+        </div>
+
+        <form id="login-form" onsubmit="handleLogin(event)">
+          <div class="form-group">
+            <label class="form-label" for="login-ident">Username or Email</label>
+            <div class="input-icon-wrap">
+              <i class="fa-solid fa-user input-icon"></i>
+              <input type="text" id="login-ident" class="form-input" placeholder="admin or you@domain.com" required autofocus value="admin">
+            </div>
+          </div>
+
+          <div class="form-group">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.35rem;">
+              <label class="form-label" for="login-password" style="margin-bottom: 0;">Password</label>
+              <span class="auth-hint-text">Default: <code>admin123</code></span>
+            </div>
+            <div class="input-icon-wrap">
+              <i class="fa-solid fa-lock input-icon"></i>
+              <input type="password" id="login-password" class="form-input" placeholder="••••••••" required value="admin123">
+              <i class="fa-solid fa-eye password-toggle-btn" id="toggle-pw-icon" onclick="togglePasswordVisibility('login-password', 'toggle-pw-icon')"></i>
+            </div>
+          </div>
+
+          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.25rem;">
+            <label class="custom-checkbox-label">
+              <input type="checkbox" id="login-remember" checked>
+              <span>Keep me signed in</span>
+            </label>
+          </div>
+
+          <button type="submit" id="login-btn" class="btn btn-primary btn-auth-submit">
+            <i class="fa-solid fa-arrow-right-to-bracket"></i>
+            <span>Sign In to Workspace</span>
+          </button>
+        </form>
+
+        <div class="auth-card-footer">
+          Don't have an account? <a href="{{ url_for('register_page') }}">Create an account</a>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+function togglePasswordVisibility(inputId, iconId) {
+  const input = document.getElementById(inputId);
+  const icon = document.getElementById(iconId);
+  if (input.type === 'password') {
+    input.type = 'text';
+    icon.classList.remove('fa-eye');
+    icon.classList.add('fa-eye-slash');
+  } else {
+    input.type = 'password';
+    icon.classList.remove('fa-eye-slash');
+    icon.classList.add('fa-eye');
+  }
+}
+
+function showAuthToast(message, type = 'info') {
+  const container = document.getElementById('toast-container');
+  if (!container) return;
+  const toast = document.createElement('div');
+  toast.className = `toast toast-${type}`;
+  toast.innerHTML = `
+    <div style="font-size: 1.1rem; color: ${type === 'success' ? '#10B981' : (type === 'error' ? '#F43F5E' : '#3B82F6')};">
+      <i class="fa-solid ${type === 'success' ? 'fa-circle-check' : (type === 'error' ? 'fa-circle-xmark' : 'fa-circle-info')}"></i>
+    </div>
+    <div class="toast-content">
+      <div class="toast-title">${type === 'success' ? 'Success' : (type === 'error' ? 'Error' : 'Notice')}</div>
+      <div class="toast-message">${message}</div>
+    </div>
+  `;
+  container.appendChild(toast);
+  setTimeout(() => toast.remove(), 4000);
+}
+
+async function handleLogin(e) {
+  e.preventDefault();
+  const ident = document.getElementById('login-ident').value.trim();
+  const password = document.getElementById('login-password').value;
+  const remember = document.getElementById('login-remember').checked;
+  const btn = document.getElementById('login-btn');
+
+  btn.disabled = true;
+  btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Authenticating...';
+
+  try {
+    const res = await API.post('/api/auth/login', {
+      identifier: ident,
+      password: password,
+      remember_me: remember
+    });
+
+    if (res.success) {
+      showAuthToast(res.message || 'Redirecting to workspace...', 'success');
+      setTimeout(() => {
+        window.location.href = '/';
+      }, 400);
+    } else {
+      showAuthToast(res.error || 'Invalid credentials.', 'error');
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fa-solid fa-arrow-right-to-bracket"></i> <span>Sign In to Workspace</span>';
+    }
+  } catch (err) {
+    showAuthToast(err.message || 'Server connection failed.', 'error');
+    btn.disabled = false;
+    btn.innerHTML = '<i class="fa-solid fa-arrow-right-to-bracket"></i> <span>Sign In to Workspace</span>';
+  }
+}
+
+async function handleDemoLogin() {
+  try {
+    const res = await API.post('/api/auth/demo-login', {});
+    if (res.success) {
+      showAuthToast('Demo Access Granted! Loading workspace...', 'success');
+      setTimeout(() => {
+        window.location.href = '/';
+      }, 350);
+    }
+  } catch (err) {
+    showAuthToast(err.message || 'Failed to login with demo account.', 'error');
+  }
+}
+</script>
+{% endblock %}

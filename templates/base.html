@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}DFD Architect – System Data Flow Diagram Documenter{% endblock %}</title>
+  <meta name="description" content="Professional software engineering tool to visually design, validate, and document Data Flow Diagrams (DFDs) across multi-level hierarchies.">
+  
+  <!-- Google Fonts: Inter, Outfit, JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&family=Outfit:wght@500;600;700;800;900&display=swap" rel="stylesheet">
+  
+  <!-- FontAwesome 6 Icons CDN -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  
+  <!-- Chart.js for Visual Architecture Analytics -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+
+  <!-- Application Stylesheets -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/canvas.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/components.css') }}">
+  {% block extra_css %}{% endblock %}
+</head>
+<body>
+
+  {% block body %}
+  <!-- Main App Shell is overridden in index.html, login.html, etc. -->
+  {% endblock %}
+
+  <!-- Global Toast Notification Container -->
+  <div id="toast-container"></div>
+
+  <!-- Global Keyboard Shortcuts Modal -->
+  <div id="modal-shortcuts" class="modal-overlay">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3 class="modal-title"><i class="fa-solid fa-keyboard" style="color: var(--primary-600); margin-right: 8px;"></i> Keyboard Shortcuts</h3>
+        <button class="btn-icon" onclick="App.closeModal('modal-shortcuts')"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="modal-body" style="display: flex; flex-direction: column; gap: 0.75rem;">
+        <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.4rem 0; border-bottom: 1px solid var(--border-subtle);">
+          <span style="font-size: 0.85rem; font-weight: 500;">Quick Global Search</span>
+          <kbd class="kbd-shortcut">Ctrl + K</kbd>
+        </div>
+        <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.4rem 0; border-bottom: 1px solid var(--border-subtle);">
+          <span style="font-size: 0.85rem; font-weight: 500;">Save Diagram Changes</span>
+          <kbd class="kbd-shortcut">Ctrl + S</kbd>
+        </div>
+        <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.4rem 0; border-bottom: 1px solid var(--border-subtle);">
+          <span style="font-size: 0.85rem; font-weight: 500;">Undo Last Action</span>
+          <kbd class="kbd-shortcut">Ctrl + Z</kbd>
+        </div>
+        <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.4rem 0; border-bottom: 1px solid var(--border-subtle);">
+          <span style="font-size: 0.85rem; font-weight: 500;">Redo Action</span>
+          <kbd class="kbd-shortcut">Ctrl + Y</kbd>
+        </div>
+        <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.4rem 0; border-bottom: 1px solid var(--border-subtle);">
+          <span style="font-size: 0.85rem; font-weight: 500;">Delete Selected Node / Flow</span>
+          <kbd class="kbd-shortcut">Delete / Backspace</kbd>
+        </div>
+        <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.4rem 0; border-bottom: 1px solid var(--border-subtle);">
+          <span style="font-size: 0.85rem; font-weight: 500;">Pan Workspace Canvas</span>
+          <kbd class="kbd-shortcut">Space + Drag</kbd>
+        </div>
+        <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.4rem 0;">
+          <span style="font-size: 0.85rem; font-weight: 500;">Auto-Layout Diagram</span>
+          <kbd class="kbd-shortcut">Alt + L</kbd>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="App.closeModal('modal-shortcuts')">Got It</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Global Confirm Action Modal -->
+  <div id="modal-confirm" class="modal-overlay">
+    <div class="modal-box" style="max-width: 440px;">
+      <div class="modal-header">
+        <h3 class="modal-title" id="confirm-title">Confirm Action</h3>
+        <button class="btn-icon" onclick="App.closeModal('modal-confirm')"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="modal-body">
+        <p id="confirm-message" style="font-size: 0.88rem; color: var(--text-secondary); line-height: 1.4;"></p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="App.closeModal('modal-confirm')">Cancel</button>
+        <button class="btn btn-danger" id="confirm-action-btn">Confirm</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Global Search Modal (Ctrl + K) -->
+  <div id="modal-search" class="modal-overlay">
+    <div class="modal-box search-modal-box">
+      <div class="search-input-header">
+        <i class="fa-solid fa-magnifying-glass" style="color: var(--primary-600); font-size: 1.1rem;"></i>
+        <input type="text" id="global-search-input" placeholder="Search projects, processes, data stores, entities, data flows..." autocomplete="off">
+        <kbd class="kbd-shortcut">ESC</kbd>
+      </div>
+      <div class="search-results-list" id="global-search-results">
+        <div style="padding: 2rem; text-align: center; color: var(--text-muted); font-size: 0.85rem;">
+          Type keywords to search across your system architecture models.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- JavaScript Application Bundle -->
+  <script src="{{ url_for('static', filename='js/api.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/state.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/canvas/history.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/canvas/autolayout.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/canvas/connections.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/canvas/nodes.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/canvas/engine.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/views/dashboard.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/views/projects.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/views/designer.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/views/validation.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/views/docs.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/views/templates.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/views/analytics.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/views/settings.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/views/help.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+
+  {% block extra_js %}{% endblock %}
+</body>
+</html>
