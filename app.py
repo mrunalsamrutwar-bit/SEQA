@@ -2,7 +2,7 @@ import os
 import json
 from datetime import datetime
 from functools import wraps
-from flask import Flask, render_template, request, jsonify, session, redirect, url_for, send_file, make_response
+from flask import Flask, render_template, request, jsonify, session, redirect, url_for, send_file, make_response, send_from_directory
 from flask_cors import CORS
 from config import Config
 from database import db, User, Project, DfdLevel, Component, DataFlow, ActivityLog
@@ -12,7 +12,14 @@ from utils.doc_generator import generate_project_documentation
 from utils.docx_export import generate_docx_stream
 from utils.pdf_export import generate_pdf_stream
 
-app = Flask(__name__)
+BASE_DIR = os.path.abspath(os.path.dirname(__file__))
+
+app = Flask(
+    __name__,
+    static_folder=os.path.join(BASE_DIR, 'static'),
+    static_url_path='/static',
+    template_folder=os.path.join(BASE_DIR, 'templates')
+)
 app.config.from_object(Config)
 CORS(app)
 db.init_app(app)
@@ -71,6 +78,10 @@ def register_page():
     if 'user_id' in session:
         return redirect(url_for('index'))
     return render_template('register.html')
+
+@app.route('/static/<path:filename>')
+def custom_static(filename):
+    return send_from_directory(os.path.join(BASE_DIR, 'static'), filename)
 
 
 # -------------------------------------------------------------
