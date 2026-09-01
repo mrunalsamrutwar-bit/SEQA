@@ -1,9 +1,14 @@
-include:
-  - index.html
-  - static/
-
+markdown: kramdown
+theme: null
 exclude:
-  - templates/
-  - utils/
-  - tests/
-  - "*.py"
+  - templates
+  - utils
+  - tests
+  - static/js
+  - app.py
+  - config.py
+  - database.py
+  - seed_data.py
+  - requirements.txt
+  - .github
+  - LICENSE
