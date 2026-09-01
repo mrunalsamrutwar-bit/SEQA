@@ -1,5 +1,7 @@
 # SEQA – DFD Architect & Documentation Studio
 
+[![SEQA CI](https://github.com/mrunalsamrutwar-bit/SEQA/actions/workflows/ci.yml/badge.svg)](https://github.com/mrunalsamrutwar-bit/SEQA/actions/workflows/ci.yml)
+[![Deploy GitHub Pages](https://github.com/mrunalsamrutwar-bit/SEQA/actions/workflows/pages.yml/badge.svg)](https://github.com/mrunalsamrutwar-bit/SEQA/actions/workflows/pages.yml)
 [![Python](https://img.shields.io/badge/Python-3.10%2B-blue.svg?style=flat-square&logo=python)](https://www.python.org/)
 [![Flask](https://img.shields.io/badge/Flask-3.0%2B-black.svg?style=flat-square&logo=flask)](https://flask.palletsprojects.com/)
 [![SQLite](https://img.shields.io/badge/SQLite-Database-003B57.svg?style=flat-square&logo=sqlite)](https://www.sqlite.org/)
