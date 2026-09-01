@@ -1,6 +1,3 @@
-# GitHub Pages Configuration
-# Exclude Flask backend templates and Python scripts from Jekyll parsing
-
 include:
   - index.html
   - static/
@@ -9,9 +6,4 @@ exclude:
   - templates/
   - utils/
   - tests/
-  - app.py
-  - config.py
-  - database.py
-  - seed_data.py
-  - requirements.txt
-  - dfd_architect.db
+  - "*.py"
