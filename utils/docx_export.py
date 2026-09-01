@@ -1,7 +1,7 @@
 import io
 import zipfile
 import xml.sax.saxutils as saxutils
-from datetime import datetime
+from datetime import datetime, timezone
 
 def escape_xml(text):
     if text is None:
@@ -327,7 +327,7 @@ def generate_docx_stream(doc_data):
             ["Version / Release", meta.get('version', '1.0.0')],
             ["DFD Level", meta.get('dfd_level', 'Level 1')],
             ["Tags / Modules", meta.get('tags', 'General')],
-            ["Generated Date", meta.get('updated_at', datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S'))]
+            ["Generated Date", meta.get('updated_at', datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S'))]
         ],
         col_widths=[3200, 6160]
     )

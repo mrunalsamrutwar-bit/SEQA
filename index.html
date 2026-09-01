@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SEQA – DFD Architect & Documentation Studio</title>
+  <meta name="description" content="Visual Data Flow Diagram (DFD) design, rule validation, and automated engineering documentation platform.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Outfit:wght@600;700;800;900&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <style>
+    :root {
+      --bg-dark: #0b0f17;
+      --card-bg: rgba(22, 30, 49, 0.7);
+      --card-border: rgba(255, 255, 255, 0.08);
+      --primary: #3b82f6;
+      --primary-glow: rgba(59, 130, 246, 0.35);
+      --secondary: #10b981;
+      --accent: #8b5cf6;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg-dark);
+      color: var(--text-main);
+      min-height: 100vh;
+      overflow-x: hidden;
+      line-height: 1.6;
+    }
+    .hero {
+      position: relative;
+      padding: 5rem 1.5rem 4rem;
+      text-align: center;
+      background: radial-gradient(circle at 50% 10%, rgba(59, 130, 246, 0.15), transparent 60%);
+    }
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.4rem 1rem;
+      border-radius: 9999px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      background: rgba(59, 130, 246, 0.12);
+      border: 1px solid rgba(59, 130, 246, 0.3);
+      color: #60a5fa;
+      margin-bottom: 1.5rem;
+    }
+    h1 {
+      font-family: 'Outfit', sans-serif;
+      font-size: clamp(2.2rem, 5vw, 3.8rem);
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      margin-bottom: 1rem;
+      background: linear-gradient(135deg, #ffffff 40%, #93c5fd 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .subtitle {
+      max-width: 680px;
+      margin: 0 auto 2.5rem;
+      font-size: 1.15rem;
+      color: var(--text-muted);
+    }
+    .cta-group {
+      display: flex;
+      justify-content: center;
+      gap: 1rem;
+      flex-wrap: wrap;
+      margin-bottom: 3.5rem;
+    }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.85rem 1.75rem;
+      border-radius: 0.65rem;
+      font-weight: 600;
+      text-decoration: none;
+      font-size: 0.95rem;
+      transition: all 0.2s ease;
+    }
+    .btn-primary {
+      background: linear-gradient(135deg, #2563eb, #3b82f6);
+      color: #fff;
+      box-shadow: 0 4px 20px var(--primary-glow);
+    }
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 24px rgba(59, 130, 246, 0.5);
+    }
+    .btn-secondary {
+      background: rgba(255, 255, 255, 0.05);
+      color: var(--text-main);
+      border: 1px solid var(--card-border);
+      backdrop-filter: blur(10px);
+    }
+    .btn-secondary:hover {
+      background: rgba(255, 255, 255, 0.1);
+      transform: translateY(-2px);
+    }
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 0 1.5rem 5rem;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 1.5rem;
+      margin-bottom: 4rem;
+    }
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 1rem;
+      padding: 2rem;
+      backdrop-filter: blur(12px);
+      transition: all 0.25s ease;
+    }
+    .card:hover {
+      border-color: rgba(59, 130, 246, 0.4);
+      transform: translateY(-4px);
+    }
+    .card-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 0.75rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.3rem;
+      margin-bottom: 1.25rem;
+    }
+    .icon-blue { background: rgba(59, 130, 246, 0.15); color: #60a5fa; }
+    .icon-green { background: rgba(16, 185, 129, 0.15); color: #34d399; }
+    .icon-purple { background: rgba(139, 92, 246, 0.15); color: #a78bfa; }
+    .icon-amber { background: rgba(245, 158, 11, 0.15); color: #fbbf24; }
+    .icon-rose { background: rgba(244, 63, 94, 0.15); color: #fb7185; }
+    .icon-cyan { background: rgba(6, 182, 212, 0.15); color: #22d3ee; }
+    .card h3 {
+      font-size: 1.2rem;
+      font-weight: 700;
+      margin-bottom: 0.5rem;
+      font-family: 'Outfit', sans-serif;
+    }
+    .card p {
+      color: var(--text-muted);
+      font-size: 0.92rem;
+    }
+    .code-block {
+      background: #06090e;
+      border: 1px solid var(--card-border);
+      border-radius: 0.75rem;
+      padding: 1.5rem;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.88rem;
+      color: #38bdf8;
+      overflow-x: auto;
+      margin-top: 1.5rem;
+    }
+    footer {
+      text-align: center;
+      padding: 2.5rem 1.5rem;
+      border-top: 1px solid var(--card-border);
+      color: var(--text-muted);
+      font-size: 0.88rem;
+    }
+    footer a { color: #60a5fa; text-decoration: none; }
+  </style>
+</head>
+<body>
+
+  <section class="hero">
+    <div class="badge">
+      <i class="fa-solid fa-layer-group"></i> Software Engineering & Quality Assurance Platform
+    </div>
+    <h1>DFD Architect & Documentation Studio</h1>
+    <p class="subtitle">
+      Design interactive multi-level Data Flow Diagrams (DFDs), validate architecture syntax rules in real-time, and generate production-ready engineering documentation with native vector PDF & Word exports.
+    </p>
+    <div class="cta-group">
+      <a href="https://github.com/mrunalsamrutwar-bit/SEQA" class="btn btn-primary" target="_blank" rel="noopener">
+        <i class="fa-brands fa-github"></i> View on GitHub
+      </a>
+      <a href="https://github.com/mrunalsamrutwar-bit/SEQA#readme" class="btn btn-secondary">
+        <i class="fa-solid fa-book-open"></i> Read Full Documentation
+      </a>
+    </div>
+  </section>
+
+  <div class="container">
+    <div class="grid">
+      <div class="card">
+        <div class="card-icon icon-blue">
+          <i class="fa-solid fa-bezier-curve"></i>
+        </div>
+        <h3>Hierarchical Canvas</h3>
+        <p>Interactive drag-and-drop workspace supporting Level 0 (Context Diagram), Level 1 (Subsystems), and Level 2 (Decomposition) with SVG connection lines.</p>
+      </div>
+
+      <div class="card">
+        <div class="card-icon icon-green">
+          <i class="fa-solid fa-shield-halved"></i>
+        </div>
+        <h3>Automated Validation</h3>
+        <p>Integrated SEQA linter catches Black Holes, Miracles, Grey Holes, direct store-to-store violations, and disconnected entities automatically.</p>
+      </div>
+
+      <div class="card">
+        <div class="card-icon icon-purple">
+          <i class="fa-solid fa-file-pdf"></i>
+        </div>
+        <h3>Zero-Dependency Exporters</h3>
+        <p>Pure-Python vector PDF and OpenXML Microsoft Word (.docx) document synthesis engines with auto-compiled Data Dictionaries and P-Specs.</p>
+      </div>
+
+      <div class="card">
+        <div class="card-icon icon-amber">
+          <i class="fa-solid fa-wand-magic-sparkles"></i>
+        </div>
+        <h3>Auto-Layout Engine</h3>
+        <p>Force-directed graph algorithms instantly organize node positioning and optimize connection routes with a single keypress (<code>Alt + L</code>).</p>
+      </div>
+
+      <div class="card">
+        <div class="card-icon icon-rose">
+          <i class="fa-solid fa-boxes-stacked"></i>
+        </div>
+        <h3>Pre-Loaded Templates</h3>
+        <p>Production-ready templates for E-Commerce, Hospital Management, Banking & ATM, Library Systems, and Online Examination platforms.</p>
+      </div>
+
+      <div class="card">
+        <div class="card-icon icon-cyan">
+          <i class="fa-solid fa-lock"></i>
+        </div>
+        <h3>Multi-User Workspace</h3>
+        <p>Complete authentication, user preferences, activity log audits, project duplication, and search indexing (<code>Ctrl + K</code>).</p>
+      </div>
+    </div>
+
+    <div class="card" style="text-align: left;">
+      <h3 style="font-size: 1.35rem; margin-bottom: 0.75rem;"><i class="fa-solid fa-terminal" style="color: #60a5fa; margin-right: 8px;"></i> Quickstart Commands</h3>
+      <p>Clone and launch the application locally in 4 simple steps:</p>
+      <div class="code-block">
+git clone https://github.com/mrunalsamrutwar-bit/SEQA.git<br>
+cd SEQA<br>
+pip install -r requirements.txt<br>
+python app.py
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    <p>© 2026 <strong>SEQA</strong>. Open source software released under the <a href="https://github.com/mrunalsamrutwar-bit/SEQA/blob/main/LICENSE" target="_blank">MIT License</a>.</p>
+  </footer>
+
+</body>
+</html>

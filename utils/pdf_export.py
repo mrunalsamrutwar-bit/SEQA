@@ -1,6 +1,6 @@
 import io
 import zlib
-from datetime import datetime
+from datetime import datetime, timezone
 
 class PurePDFBuilder:
     """
@@ -322,7 +322,7 @@ def generate_pdf_stream(doc_data):
             ["Version / Release", meta.get('version', '1.0.0')],
             ["DFD Level", meta.get('dfd_level', 'Level 1')],
             ["Tags / Modules", meta.get('tags', 'General')],
-            ["Generated Date", meta.get('updated_at', datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S'))]
+            ["Generated Date", meta.get('updated_at', datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S'))]
         ],
         col_pcts=[0.35, 0.65]
     )

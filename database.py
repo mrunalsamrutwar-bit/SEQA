@@ -1,9 +1,12 @@
 import json
-from datetime import datetime
+from datetime import datetime, timezone
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import generate_password_hash, check_password_hash
 
 db = SQLAlchemy()
+
+def utc_now():
+    return datetime.now(timezone.utc)
 
 class User(db.Model):
     __tablename__ = 'users'
@@ -15,7 +18,7 @@ class User(db.Model):
     full_name = db.Column(db.String(120), nullable=True)
     role = db.Column(db.String(50), default='Software Architect')
     preferences_json = db.Column(db.Text, default='{}')
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=utc_now)
 
     projects = db.relationship('Project', backref='owner', lazy=True, cascade='all, delete-orphan')
     activities = db.relationship('ActivityLog', backref='user', lazy=True, cascade='all, delete-orphan')
@@ -61,8 +64,8 @@ class Project(db.Model):
     tags = db.Column(db.String(255), default='DFD, System Architecture')
     status = db.Column(db.String(50), default='In Progress')
     is_demo = db.Column(db.Boolean, default=False)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=utc_now)
+    updated_at = db.Column(db.DateTime, default=utc_now, onupdate=utc_now)
 
     levels = db.relationship('DfdLevel', backref='project', lazy=True, cascade='all, delete-orphan', order_by='DfdLevel.level_number')
     components = db.relationship('Component', backref='project', lazy=True, cascade='all, delete-orphan')
@@ -111,7 +114,7 @@ class DfdLevel(db.Model):
     level_name = db.Column(db.String(100), default='Context Diagram (Level 0)')
     parent_process_id = db.Column(db.String(50), nullable=True) # e.g., '1.0' or '2.0'
     notes = db.Column(db.Text, default='')
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=utc_now)
 
     components = db.relationship('Component', backref='level', lazy=True, cascade='all, delete-orphan')
     data_flows = db.relationship('DataFlow', backref='level', lazy=True, cascade='all, delete-orphan')
@@ -150,8 +153,8 @@ class Component(db.Model):
     
     # Metadata for custom properties like entity_type, storage_type, fields, etc.
     metadata_json = db.Column(db.Text, default='{}')
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=utc_now)
+    updated_at = db.Column(db.DateTime, default=utc_now, onupdate=utc_now)
 
     def get_metadata(self):
         try:
@@ -202,8 +205,8 @@ class DataFlow(db.Model):
     source_component = db.relationship('Component', foreign_keys=[source_id], backref='outgoing_flows')
     dest_component = db.relationship('Component', foreign_keys=[destination_id], backref='incoming_flows')
 
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=utc_now)
+    updated_at = db.Column(db.DateTime, default=utc_now, onupdate=utc_now)
 
     def to_dict(self):
         return {
@@ -236,7 +239,7 @@ class ActivityLog(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='CASCADE'), nullable=True)
     action = db.Column(db.String(100), nullable=False)
     details = db.Column(db.Text, default='')
-    timestamp = db.Column(db.DateTime, default=datetime.utcnow)
+    timestamp = db.Column(db.DateTime, default=utc_now)
 
     def to_dict(self):
         return {
